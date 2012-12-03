@@ -4,8 +4,8 @@ import json
 
 class GameProtocol(Protocol):
 
-	play_id = 0
 	active = False
+	deferred = None
 
 	def dataReceived(self, data):
 		msg = json.loads(data)
@@ -13,19 +13,21 @@ class GameProtocol(Protocol):
 			self._send_error('Received improper message')
 		elif msg['type'] == 'move':
 			if self.active:
-				self.factory.deferred.callback( msg['value'] )
+				self.deferred.callback( msg['value'] )
+				self.deferred = None
 				self.active = False
 			else:
 				self._send_error('Not your turn yet')
 		else:
 			self._send_error('Received unknown message type')
 
-	def prompt_for_move(self, game_state):
+	def prompt_for_move(self, game_state, d):
 		self.active = True
+		self.deferred = d
 		data_out = dict(type='prompt', value='move', state=game_state)
 		self.transport.write(json.dumps(data_out))
 
-	def inform_winner(self, is_winner, game_state):
+	def game_over(self, is_winner, game_state):
 		data_out = dict(type='winner', value=is_winner, state=game_state)
 		self.transport.write(json.dumps(data_out))
 		self.transport.loseConnection()
@@ -39,53 +41,61 @@ class GameProtocol(Protocol):
 class GameFactory(ServerFactory):
 	
 	protocol = GameProtocol
-	play_id = 1
-	clients = {}
-	deferred = None	# send move to callback of this deferred
+	clients = {}			# maps client id to its protocol
+	client_waiting = None	# id of client waiting for a partner to join
+	game = None				# class of game to create every two connections
+	next_id = 1				# id to give next client connection
+
+	def __init__(self, game):
+		self.game = game
 
 	def buildProtocol(self, address):
 		proto = ServerFactory.buildProtocol(self, address)
-		proto.play_id = self.play_id
-		self.clients[self.play_id] = proto
-		self.play_id += 1
+		self.clients[self.next_id] = proto
+		if self.client_waiting is None:
+			self.client_waiting = self.next_id
+		else:
+			self.game(self.client_waiting, self.next_id)
+			self.client_waiting = None
+		self.next_id += 1
 		return proto
 
-	def get_move_from(self, d, active, game_state):
-		self.deferred = d
-		if active in self.clients:
-			self.clients[active].prompt_for_move(game_state)
-		else:
-			reactor.callLater(0.1, self.get_move_from, d, active, game_state)
+	def get_move_from(self, d, cid, game_state):
+		self.clients[cid].prompt_for_move(game_state, d)
 
-	def inform_winner(self, winner, game_state):
-		for client in self.clients:
-			win_value = None if winner == -1 else winner == client #True/False/None
-			self.clients[client].inform_winner(win_value, game_state)
+	def game_over(self, cid_win, cid_lose, draw, game_state):
+		self.clients[cid_win].game_over(None if draw else True, game_state)
+		self.clients[cid_lose].game_over(None if draw else False, game_state)
+		del self.clients[cid_win]
+		del self.clients[cid_lose]
 
 
-factory = GameFactory()
+factory = None
 
 
 ### API defined below. Game should call these functions ###
 
-def get_move_from(player, game_state):
-	print 'Get from player', player
+def get_move_from(cid, game_state):
+	print 'Get from player', cid
 	d = defer.Deferred()
-	reactor.callWhenRunning(factory.get_move_from, d, player, game_state)
+	reactor.callWhenRunning(factory.get_move_from, d, cid, game_state)
 	return d
 
 
-def inform_winner(player, game_state):
-	print 'Winner is', player
-	factory.inform_winner(player, game_state)
+def game_over(winner, loser, draw, game_state):
+	factory.game_over(winner, loser, draw, game_state)
 
 
 def run(game):
+	""" An object of class 'game' is created for every two clients. """
+
 	port = 8040
 	iface = 'localhost'
 
+	global factory
+	factory = GameFactory(game)
+
 	reactor.listenTCP(port, factory, interface=iface)
-	get_move_from(game.active, game.state).addCallbacks(game.move_received, game.err_received)
 	reactor.run()
 
 
@@ -93,27 +103,37 @@ def run(game):
 ### Game stuff defined below. Move to separate module if necessary ###
 
 class TicTacToe():
+	
+	def __init__(self, cid1, cid2):
+		self.cid = {1: cid1, 2: cid2}
+		self.state = [0,0,0,0,0,0,0,0,0]
+		self.active = 1
+		self._get_next_move()
 
-	state = [0,0,0,0,0,0,0,0,0]
-	active = 1
-
+	
 	def move_received(self, move):
 		print 'received:', move
 		self.state[move] = self.active
 		print 'new state:', self.state
 		winner = self._winner(move)
-		if winner != 0:
-			inform_winner(winner, self.state)
-		else:
+		if winner == 0:
 			self.active = 3 - self.active
-			d = get_move_from(self.active, self.state)
-			d.addCallbacks(self.move_received, self.err_received)
-
+			self._get_next_move()
+		elif winner == -1:
+			game_over(self.cid[1], self.cid[2], True, self.state)
+		else:
+			game_over(self.cid[winner], self.cid[3-winner], False, self.state)
+			
 
 	def err_received(self):
 		raise Exception('Errback called')
 
+	
+	def _get_next_move(self):
+		d = get_move_from(self.cid[self.active], self.state)
+		d.addCallbacks(self.move_received, self.err_received)
 
+	
 	def _winner(self, move):
 		# Check verticals
 		if self.state[move] == self.state[move-3] == self.state[move-6]:
@@ -137,4 +157,4 @@ class TicTacToe():
 ### Main External Call ###
 
 if __name__ == '__main__':
-	run(TicTacToe())
+	run(TicTacToe)

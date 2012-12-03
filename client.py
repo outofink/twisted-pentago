@@ -17,7 +17,6 @@ class GameClientProtocol(Protocol):
 			self._send_move(m)
 
 		elif msg['type'] == 'winner':
-			print 'Message:', msg
 			self._print_board(msg['state'])
 			if msg['value'] == None:
 				print '[Server] You have tied!'
