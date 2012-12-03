@@ -1,7 +1,7 @@
 twisted-tictactoe
 =================
 
-This project is a server to which clients can connect via TCP two play a game of tic tac toe.
+This project is a server to which clients can connect via TCP to play a game of tic tac toe.
 
 ## Instructions
 Run "python server.py" in one terminal window.
