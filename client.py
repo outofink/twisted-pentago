@@ -25,6 +25,7 @@ class GameClientProtocol(Protocol):
 			else:
 				print '[Server] You have lost!'
 			self.transport.loseConnection()
+			reactor.stop()
 
 		elif msg['type'] == 'error':
 			print '[Server] {}'.format(msg['value'])
