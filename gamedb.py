@@ -64,10 +64,11 @@ def count_derived(state):
 	# 	a is the number of such games that resulted in a draw
 	# 	b is the number of such games won by player 1
 	# 	c is the number of such games won by player 2
-	where = ' AND '.join(['p{}={}'.format(i, state[i]) for i in xrange(9) if state[i] != 0])	# This might be prone to SQL injections
+	stmts = ['done=1'] + ['p{}={}'.format(i, state[i]) for i in xrange(9) if state[i] != 0] # This might be prone to SQL injections
+	where = ' AND '.join(stmts)	
 	q = ''' SELECT winner, count(*)
 			FROM games
-			WHERE done=1 AND {}
+			WHERE {}
 			GROUP BY winner '''.format(where)
 	c.execute(q)
 	result = c.fetchall()
