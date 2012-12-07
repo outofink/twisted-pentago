@@ -2,6 +2,7 @@ from twisted.internet.protocol import Protocol, ClientFactory
 from twisted.internet import reactor
 import json
 from gamedb import count_derived
+from random import choice as random_choice
 
 
 class GameClientProtocol(Protocol):
@@ -13,8 +14,8 @@ class GameClientProtocol(Protocol):
 			print '[Error] Received invalid message from server'
 		
 		elif msg['type'] == 'prompt' and msg['value'] == 'move':
-			print '[Server] Your turn to move!'
 			m = self._get_move(msg['state'])
+			print '[AI] Sending move:', m
 			self._send_move(m)
 
 		elif msg['type'] == 'winner':
@@ -40,13 +41,22 @@ class GameClientProtocol(Protocol):
 		best_score, best_move = None, None
 		for i in xrange(9):
 			if state[i] == 0:
+				# Get stats for potential move
 				statel[i] = me
 				draws, p1wins, p2wins = count_derived(statel)
 				statel[i] = 0
+				# Heuristic score for that move
 				score = p1wins - p2wins if me == 1 else p2wins - p1wins
+				try:
+					score = float(score) / (draws + p1wins + p2wins)
+				except ZeroDivisionError:
+					score = 0
+				# Compare score against previous best
 				if score > best_score:
-					best_score, best_move = score, i
-		return best_move
+					best_score, best_move = score, [i]
+				elif score == best_score:
+					best_move.append(i)
+		return random_choice(best_move)
 
 
 	def _send_move(self, move):
