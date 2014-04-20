@@ -4,10 +4,10 @@ twisted-pentago
 This project is a server to which clients can connect via TCP to play a game of Pentago.
 
 ## Instructions
-Run "python pentagoM.py" in one terminal window.   
-Run "python client.py" in two separate terminal windows.
+Run `python pentagoM.py` in one terminal window.   
+Run `python client.py` in two separate terminal windows.
 
-To play in just one terminal window, run "python pentagoS.py" (this does not require twisted).
+To play in just one terminal window, run `python pentagoS.py` (this does not require twisted).
 
 ## Requirements
 *   [Python 2.x](https://www.python.org/)
