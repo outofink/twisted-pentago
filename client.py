@@ -257,6 +257,7 @@ class GameClientProtocol(Protocol):
 	{0[2][6]} {0[2][7]} {0[2][8]}|{0[3][6]} {0[3][7]} {0[3][8]}\n""".format(pstate)
 
 	def connectionMade(self):
+		system('cls' if name == 'nt' else 'clear')
 		print "You are WHITE:\n"
 		self._print_board([" "]*36)
 		print "Waiting for Black to connect..."
