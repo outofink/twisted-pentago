@@ -11,7 +11,13 @@ class GameProtocol(Protocol):
 		msg = json.loads(data)
 		if 'type' not in msg:
 			self._send_error('Received improper message')
+		#if a move was done 
 		elif msg['type'] == 'move':
+			if self.active:
+				self.deferred.callback( msg['value'] )
+			else:
+				self._send_error('Not your turn yet')
+		elif msg['type'] == 'rotate':
 			if self.active:
 				self.deferred.callback( msg['value'] )
 				self.deferred = None
@@ -21,10 +27,16 @@ class GameProtocol(Protocol):
 		else:
 			self._send_error('Received unknown message type')
 
-	def prompt_for_move(self, game_state, d):
+	def prompt_for_move(self, game_state, d, cid):
 		self.active = True
 		self.deferred = d
-		data_out = dict(type='prompt', value='move', state=game_state)
+		data_out = dict(type='prompt', value='move', state=game_state, player=cid)
+		self.transport.write(json.dumps(data_out))
+
+	def prompt_for_rotate(self, game_state, d, cid):
+		self.active = True
+		self.deferred = d
+		data_out = dict(type='prompt', value='rotate', state=game_state, player=cid)
 		self.transport.write(json.dumps(data_out))
 
 	def game_over(self, is_winner, game_state):
@@ -61,7 +73,12 @@ class GameFactory(ServerFactory):
 		return proto
 
 	def get_move_from(self, d, cid, game_state):
-		self.clients[cid].prompt_for_move(game_state, d)
+                #goes and asks client for a move
+		self.clients[cid].prompt_for_move(game_state, d, cid)
+
+	def get_rotate_from(self, d, cid, game_state):
+                #goes and asks client for a move
+		self.clients[cid].prompt_for_rotate(game_state, d, cid)
 
 	def game_over(self, cid_win, cid_lose, draw, game_state):
 		self.clients[cid_win].game_over(None if draw else True, game_state)
@@ -81,6 +98,11 @@ def get_move_from(cid, game_state):
 	reactor.callWhenRunning(factory.get_move_from, d, cid, game_state)
 	return d
 
+def get_rotate_from(cid, game_state):
+	print 'Get from player', cid
+	d = defer.Deferred()
+	reactor.callWhenRunning(factory.get_rotate_from, d, cid, game_state)
+	return d
 
 def game_over(winner, loser, draw, game_state):
 	factory.game_over(winner, loser, draw, game_state)
