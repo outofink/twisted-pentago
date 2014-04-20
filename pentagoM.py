@@ -10,7 +10,6 @@ class Pentago():
 		gamedb.create_game(cid1, cid2)
 		self._get_next_move([0,]*36)
 
-	
 	def move_received(self, move):
 		print 'received:', move
 		#does the move on the server:

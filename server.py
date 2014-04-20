@@ -48,8 +48,6 @@ class GameProtocol(Protocol):
 		data_out = dict(type='error', value=msg)
 		self.transport.write(json.dumps(data_out))
 
-
-
 class GameFactory(ServerFactory):
 	
 	protocol = GameProtocol
@@ -86,9 +84,7 @@ class GameFactory(ServerFactory):
 		del self.clients[cid_win]
 		del self.clients[cid_lose]
 
-
 factory = None
-
 
 ### API defined below. Game should call these functions ###
 
