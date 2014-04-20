@@ -15,8 +15,19 @@ class GameProtocol(Protocol):
 		elif msg['type'] == 'move':
 			if self.active:
 				self.deferred.callback( msg['value'] )
+				self.deferred = None
+				self.active = False
 			else:
 				self._send_error('Not your turn yet')
+
+		elif msg['type'] == 'shown':
+			if self.active:
+				self.deferred.callback( msg['value'] )
+				self.deferred = None
+				self.active = False
+			else:
+				self._send_error('Not your turn yet')
+
 		elif msg['type'] == 'rotate':
 			if self.active:
 				self.deferred.callback( msg['value'] )
@@ -24,6 +35,15 @@ class GameProtocol(Protocol):
 				self.active = False
 			else:
 				self._send_error('Not your turn yet')
+
+		elif msg['type'] == 'init':
+			if self.active:
+				self.deferred.callback( msg['value'] )
+				self.deferred = None
+				self.active = False
+			else:
+				self._send_error('Not your turn yet')
+
 		else:
 			self._send_error('Received unknown message type')
 
@@ -33,14 +53,26 @@ class GameProtocol(Protocol):
 		data_out = dict(type='prompt', value='move', state=game_state, player=cid)
 		self.transport.write(json.dumps(data_out))
 
+	def prompt_for_shown(self, game_state, d, cid):
+		self.active = True
+		self.deferred = d
+		data_out = dict(type='prompt', value='shown', state=game_state, player=cid)
+		self.transport.write(json.dumps(data_out))
+
+	def prompt_for_init(self, game_state, d, cid):
+		self.active = True
+		self.deferred = d
+		data_out = dict(type='prompt', value='init', state=game_state, player=cid)
+		self.transport.write(json.dumps(data_out))
+
 	def prompt_for_rotate(self, game_state, d, cid):
 		self.active = True
 		self.deferred = d
 		data_out = dict(type='prompt', value='rotate', state=game_state, player=cid)
 		self.transport.write(json.dumps(data_out))
 
-	def game_over(self, is_winner, game_state):
-		data_out = dict(type='winner', value=is_winner, state=game_state)
+	def game_over(self, is_winner, game_state, cid):
+		data_out = dict(type='winner', value=is_winner, state=game_state, player=cid)
 		self.transport.write(json.dumps(data_out))
 		self.transport.loseConnection()
 
@@ -78,9 +110,17 @@ class GameFactory(ServerFactory):
                 #goes and asks client for a move
 		self.clients[cid].prompt_for_rotate(game_state, d, cid)
 
+	def get_shown_from(self, d, cid, game_state):
+                #goes and asks client for a move
+		self.clients[cid].prompt_for_shown(game_state, d, cid)
+
+	def get_init_from(self, d, cid, game_state):
+                #goes and asks client for a move
+		self.clients[cid].prompt_for_init(game_state, d, cid)
+
 	def game_over(self, cid_win, cid_lose, draw, game_state):
-		self.clients[cid_win].game_over(None if draw else True, game_state)
-		self.clients[cid_lose].game_over(None if draw else False, game_state)
+		self.clients[cid_win].game_over(None if draw else True, game_state, cid_win)
+		self.clients[cid_lose].game_over(None if draw else False, game_state, cid_lose)
 		del self.clients[cid_win]
 		del self.clients[cid_lose]
 
@@ -92,6 +132,18 @@ def get_move_from(cid, game_state):
 	print 'Get from player', cid
 	d = defer.Deferred()
 	reactor.callWhenRunning(factory.get_move_from, d, cid, game_state)
+	return d
+
+def get_shown_from(cid, game_state):
+	print 'Get from player', cid
+	d = defer.Deferred()
+	reactor.callWhenRunning(factory.get_shown_from, d, cid, game_state)
+	return d
+
+def get_init_from(cid, game_state):
+	print 'Get from player', cid
+	d = defer.Deferred()
+	reactor.callWhenRunning(factory.get_init_from, d, cid, game_state)
 	return d
 
 def get_rotate_from(cid, game_state):

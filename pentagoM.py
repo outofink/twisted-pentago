@@ -8,7 +8,7 @@ class Pentago():
 		self.cid = {1: cid1, 2: cid2}
 		self.active = 1 #player number
 		gamedb.create_game(cid1, cid2)
-		self._get_next_move([0,]*36)
+		self._get_next_init([0,]*36)
 
 	def move_received(self, move):
 		print 'received:', move
@@ -22,8 +22,10 @@ class Pentago():
 		winner = self._winner(state)
 		#if not:
 		if winner == 0:
+			self.active = 3 - self.active
 			#get next (same)
-			self._get_next_rotate(state)
+			print "shown to other"
+			self._get_next_shown(state)
 		elif winner == -1:
 			gamedb.game_over(self.cid[1], 1, True) # mark game as a draw
 			server.game_over(self.cid[1], self.cid[2], True, state)
@@ -43,6 +45,7 @@ class Pentago():
 		winner = self._winner(state)
 		#if not:
 		if winner == 0:
+			print "move to other"
 			self.active = 3 - self.active
 			#get next
 			self._get_next_move(state)
@@ -52,11 +55,23 @@ class Pentago():
 		else:
 			gamedb.game_over(self.cid[winner], winner, False)
 			server.game_over(self.cid[winner], self.cid[3-winner], False, state)
-			
+	
+	def shown_received(self, shown):
+		print 'received:', shown
+		print "rotate to other"
+		state = gamedb.get_state(self.cid[self.active])
+		self.active = 3 - self.active
+		self._get_next_rotate(state)
+
+	def init_received(self, init):
+		print 'received:', init
+		print "move to other"
+		state = [0,]*36
+		self.active = 3 - self.active
+		self._get_next_move(state)
 
 	def err_received(self):
 		raise Exception('Errback called')
-
 	
 	def _get_next_move(self, state):
 		d = server.get_move_from(self.cid[self.active], state)
@@ -66,6 +81,13 @@ class Pentago():
 		d = server.get_rotate_from(self.cid[self.active], state)
 		d.addCallbacks(self.rotate_received, self.err_received)
 
+	def _get_next_shown(self, state):
+		d = server.get_shown_from(self.cid[self.active], state)
+		d.addCallbacks(self.shown_received, self.err_received)
+
+	def _get_next_init(self, state):
+		d = server.get_init_from(self.cid[self.active], state)
+		d.addCallbacks(self.init_received, self.err_received)
 	
 	def _winner(self, state):
 
