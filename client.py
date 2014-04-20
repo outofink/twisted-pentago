@@ -158,7 +158,7 @@ class GameClientProtocol(Protocol):
 				print rotate
 				pass3 = True
 
-		if player == 1:
+		if player % 2 == 1:
 			tcolor = "Black" #opposite color
 		else:
 			tcolor = "White" #opposite color
