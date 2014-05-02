@@ -5,8 +5,8 @@ class Pentago:
 		self.play()
 
 	def genBoard(self):
-		x = [[" "]*9]*4
-		return x
+		newboard = [[" " for i in range(9)] for j in range(4)]  
+		return newboard
 
 	def prettyBoard(self, board):
 		mboard = """\
@@ -62,16 +62,14 @@ class Pentago:
 			pass1 = False
 			pass2 = False
 			rawrot=raw_input("Rotation (ie. A' or C\"): ")
-			if rawrot== " ":
-				return board
 			if len(rawrot) == 2:
 				pass0 = True
 			if pass0:
-				for x in ["'",'"']:
-					if rawrot.endswith(str(x)):
+				for mark in ["'",'"']:
+					if rawrot.endswith(str(mark)):
 						pass1 = True
-				for x in ["A", "B", "C", "D"]:
-					if rawrot.startswith(x):
+				for letter in ["A", "B", "C", "D"]:
+					if rawrot.startswith(letter):
 						pass2 = True
 			if pass1 and pass2:
 				if rawrot.startswith("A"):
@@ -96,11 +94,11 @@ class Pentago:
 			if len(rawloc) == 2:
 				pass0 = True
 			if pass0:
-				for x in range(1,10):
-					if rawloc.endswith(str(x)):
+				for number in range(1,10):
+					if rawloc.endswith(str(number)):
 						pass1 = True
-				for x in ["A", "B", "C", "D"]:
-					if rawloc.startswith(x):
+				for letter in ["A", "B", "C", "D"]:
+					if rawloc.startswith(letter):
 						pass2 = True
 			if pass1 and pass2:
 				if rawloc.startswith("A"):
@@ -114,14 +112,9 @@ class Pentago:
 				place=int(rawloc[-1])
 				if board[square][place-1]==" ":
 					pass3 = True
-
-		nboard=self.genBoard()
 	
-		nboard[square][place-1] = color
-		for x in range(4):
-			if x != square:
-				nboard[x]=board[x]
-		return nboard
+		board[square][place-1] = color
+		return board
 
 
 	def winBoards(self, board):
@@ -150,12 +143,12 @@ class Pentago:
 
 	def checkGameOver(self, boards):
 		winners =[]
-		for x in boards:
-			for y in range(len(x)):
+		for board in boards:
+			for solution in range(len(board)):
 				#result_list = []
-				current = x[y][0]
+				current = board[solution][0]
 				count = 0
-				for value in x[y]:
+				for value in board[solution]:
 				    if value == current:
 				        count += 1
 				    else:
@@ -227,5 +220,6 @@ class Pentago:
 						self.printBoard(gameBoard)
 						if self.prettyCheckGameover(gameBoard):
 							playing = False
-new_game=Pentago()
-new_game()
+							
+if __name__ == "__main__":
+	Pentago()
