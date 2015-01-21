@@ -4,6 +4,7 @@ twisted-pentago
 This project is a server to which clients can connect via TCP to play a game of Pentago.
 
 ## Instructions
+Change `iface' and `port` in `server.py` and `host` and `port` in `client.py` to the IP and port you would like the server to run from.
 Run `python pentagoM.py` in one terminal window.   
 Run `python client.py` in two separate terminal windows.
 
