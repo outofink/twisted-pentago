@@ -61,7 +61,7 @@ class Pentago:
 			pass0 = False
 			pass1 = False
 			pass2 = False
-			rawrot=raw_input("Rotation (ie. A' or C\"): ")
+			rawrot=raw_input("Rotation (e.g. A' or C\"): ")
 			if len(rawrot) == 2:
 				pass0 = True
 			if pass0:
@@ -90,7 +90,7 @@ class Pentago:
 			pass0 = False
 			pass1 = False
 			pass2 = False
-			rawloc=raw_input("Location (ie. A4 or C9): ")
+			rawloc=raw_input("Location (e.g. A4 or C9): ")
 			if len(rawloc) == 2:
 				pass0 = True
 			if pass0:
@@ -209,13 +209,13 @@ class Pentago:
 				if self.prettyCheckGameover(gameBoard):
 					playing = False
 				if playing:
-					print "Blacks's Turn\n"
+					print "Black's Turn\n"
 					gameBoard=self.placePiece(gameBoard, "B")
 					self.printBoard(gameBoard)
 					if self.prettyCheckGameover(gameBoard):
 						playing = False
 					if playing:
-						print "Blacks's Turn\n"
+						print "Black's Turn\n"
 						gameBoard=self.rotateSquare(gameBoard)
 						self.printBoard(gameBoard)
 						if self.prettyCheckGameover(gameBoard):

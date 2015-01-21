@@ -71,7 +71,7 @@ class GameClientProtocol(Protocol):
 			pass1 = False
 			pass2 = False
 			pass3 = False
-			rawloc=raw_input("Location (ie. A4 or C9): ")
+			rawloc=raw_input("Location (e.g. A4 or C9): ")
 			rawloc=rawloc.strip()
 			if (len(rawloc)) == 2:
 				pass0 = True
@@ -153,7 +153,7 @@ class GameClientProtocol(Protocol):
 			pass0 = False
 			pass1 = False
 			pass2 = False
-			rawrot=raw_input("Rotation (ie. A' or C\"): ")
+			rawrot=raw_input("Rotation (e.g. A' or C\"): ")
 			rawrot = rawrot.strip()
 			if len(rawrot) == 2:
 				pass0 = True
