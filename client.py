@@ -1,4 +1,3 @@
-#!c:/Python27/python.exe -u
 from twisted.internet.protocol import Protocol, ClientFactory
 from twisted.internet import reactor
 import json

@@ -1,4 +1,3 @@
-#!c:/Python27/python.exe -u
 import server
 import gamedb
 
