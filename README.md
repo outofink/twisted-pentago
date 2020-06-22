@@ -12,7 +12,7 @@ Run `python client.py` in two separate terminal windows.
 To play in just one terminal window, run `python pentagoS.py` (this does not require twisted).
 
 ## Requirements
-*   [Python 2.x](https://www.python.org/)
+*   [Python](https://www.python.org/)
 *   [Twisted](https://twistedmatrix.com/)
 
 ## Gameplay
@@ -35,7 +35,7 @@ Possible moves are lettered `A` to `D`, with either a `'` or `"`, being to rotat
              |
         C    |    D
              |
-             
+
 ## Rules
-The rules for Pentago can be found [here](http://www.mindtwisterusa.com/pdfs/Strategy_Guide.pdf).
+The rules for Pentago can be found [here](https://webdav.info.ucl.ac.be/webdav/ingi2261/ProblemSet3/PentagoRulesStrategy.pdf).
              

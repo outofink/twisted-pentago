@@ -10,25 +10,25 @@ class GameClientProtocol(Protocol):
 		msg = json.loads(data)
 		
 		if 'type' not in msg:
-			print '[Error] Received invalid message from server'
+			print('[Error] Received invalid message from server')
 		
 		elif msg['type'] == 'prompt' and msg['value'] == 'move':
-			print '[Server] Your turn to move!'
+			print('[Server] Your turn to move!')
 			m = self._get_move(msg['state'], msg['player'])
 			self._send_move(m)
 
 		elif msg['type'] == 'prompt' and msg['value'] == 'rotate':
-			print '[Server] Your turn to rotate!'
+			print('[Server] Your turn to rotate!')
 			m = self._get_rotate(msg['state'], msg['player'])
 			self._send_rotate(m)
 
 		elif msg['type'] == 'prompt' and msg['value'] == 'shown':
-			print '[Server] Your turn to show!'
+			print('[Server] Your turn to show!')
 			m = self._get_shown(msg['state'], msg['player'])
 			self._send_shown(m)
 
 		elif msg['type'] == 'prompt' and msg['value'] == 'init':
-			print '[Server] Your turn to init!'
+			print('[Server] Your turn to init!')
 			m = self._get_init(msg['state'], msg['player'])
 			self._send_init(m)
 
@@ -38,22 +38,22 @@ class GameClientProtocol(Protocol):
 				pcolor = "White"
 			else:
 				pcolor = "Black"
-			print "You are %s:\n" % pcolor.upper()
+			print("You are %s:\n" % pcolor.upper())
 			self._print_board(msg['state'])
 			if msg['value'] == None:
-				print 'You tied!'
+				print('You tied!')
 			elif msg['value'] == True:
-				print 'You won!'
+				print('You won!')
 			else:
-				print 'You lost!'
+				print('You lost!')
 			self.transport.loseConnection()
 			#reactor.stop()
 
 		elif msg['type'] == 'error':
-			print '[Server] {}'.format(msg['value'])
+			print('[Server] {}'.format(msg['value']))
 		
 		else:
-			print '[Server:{}] {}'.format(msg['type'], msg['value'])
+			print('[Server:{}] {}'.format(msg['type'], msg['value']))
 
 	
 	def _get_move(self, state, player):
@@ -65,13 +65,13 @@ class GameClientProtocol(Protocol):
 				pcolor = "White"
 			else:
 				pcolor = "Black"
-			print "You are %s:\n" % pcolor.upper()
+			print("You are %s:\n" % pcolor.upper())
 			self._print_board(state)
 			pass0 = False
 			pass1 = False
 			pass2 = False
 			pass3 = False
-			rawloc=raw_input("Location (e.g. A4 or C9): ")
+			rawloc=input("Location (e.g. A4 or C9): ")
 			rawloc=rawloc.strip()
 			if (len(rawloc)) == 2:
 				pass0 = True
@@ -148,12 +148,12 @@ class GameClientProtocol(Protocol):
 				pcolor = "White"
 			else:
 				pcolor = "Black"
-			print "You are %s:\n" % pcolor.upper()
+			print("You are %s:\n" % pcolor.upper())
 			self._print_board(state)
 			pass0 = False
 			pass1 = False
 			pass2 = False
-			rawrot=raw_input("Rotation (e.g. A' or C\"): ")
+			rawrot=input("Rotation (e.g. A' or C\"): ")
 			rawrot = rawrot.strip()
 			if len(rawrot) == 2:
 				pass0 = True
@@ -177,10 +177,10 @@ class GameClientProtocol(Protocol):
 					rotate = self.rotateC(pstate, square)
 				else:
 					rotate = self.rotateCC(pstate, square)
-				print rotate
-				print
+				print(rotate)
+				print()
 				rotate = self.boardToState(rotate)
-				print rotate
+				print(rotate)
 				pass3 = True
 
 		if player % 2 == 1:
@@ -193,9 +193,9 @@ class GameClientProtocol(Protocol):
 		state=rotate
 
 		system('cls' if name == 'nt' else 'clear')
-		print "You are %s:\n" % pcolor.upper()
+		print("You are %s:\n" % pcolor.upper())
 		self._print_board(state)
-		print "Waiting for %s to move..." % tcolor
+		print("Waiting for %s to move..." % tcolor)
 		return rotate
 
 	def _get_shown(self, state, player):
@@ -206,33 +206,33 @@ class GameClientProtocol(Protocol):
 			tcolor = "White" #opposite color
 			pcolor = "Black"
 		system('cls' if name == 'nt' else 'clear')
-		print "You are %s:\n" % pcolor.upper() 
+		print("You are %s:\n" % pcolor.upper()) 
 		self._print_board(state)
-		print "Waiting for %s to rotate..." % tcolor
+		print("Waiting for %s to rotate..." % tcolor)
 		return True
 
 	def _get_init(self, state, player):
 		system('cls' if name == 'nt' else 'clear')
-		print "You are WHITE:\n"
+		print("You are WHITE:\n")
 		self._print_board(state)
-		print "Waiting for Black to move..."
+		print("Waiting for Black to move...")
 		return True
 
 	def _send_move(self, move):
 		data_out = dict(type="move", value=move)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def _send_rotate(self, rotate):
 		data_out = dict(type="rotate", value=rotate)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def _send_shown(self, shown):
 		data_out = dict(type="shown", value=shown)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def _send_init(self, init):
 		data_out = dict(type="init", value=init)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def _print_board(self, state):
 		y=0
@@ -245,22 +245,21 @@ class GameClientProtocol(Protocol):
 			else:
 				dstate[y]=" "
 			y+=1
-		f = lambda x: ' ' if x == 0 else x
 		pstate=[dstate[:9], dstate[9:18], dstate[18:27], dstate[27:36]]
-		print """\
+		print("""\
 	{0[0][0]} {0[0][1]} {0[0][2]}|{0[1][0]} {0[1][1]} {0[1][2]}
 	{0[0][3]} {0[0][4]} {0[0][5]}|{0[1][3]} {0[1][4]} {0[1][5]}
 	{0[0][6]} {0[0][7]} {0[0][8]}|{0[1][6]} {0[1][7]} {0[1][8]}
 	-----+-----
 	{0[2][0]} {0[2][1]} {0[2][2]}|{0[3][0]} {0[3][1]} {0[3][2]}
 	{0[2][3]} {0[2][4]} {0[2][5]}|{0[3][3]} {0[3][4]} {0[3][5]}
-	{0[2][6]} {0[2][7]} {0[2][8]}|{0[3][6]} {0[3][7]} {0[3][8]}\n""".format(pstate)
+	{0[2][6]} {0[2][7]} {0[2][8]}|{0[3][6]} {0[3][7]} {0[3][8]}\n""".format(pstate))
 
 	def connectionMade(self):
 		system('cls' if name == 'nt' else 'clear')
-		print "You are WHITE:\n"
+		print("You are WHITE:\n")
 		self._print_board([" "]*36)
-		print "Waiting for Black to connect..."
+		print("Waiting for Black to connect...")
 
 
 class GameClientFactory(ClientFactory):

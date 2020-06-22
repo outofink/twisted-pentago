@@ -119,7 +119,7 @@ class Pentago:
 		for board in boards:
 			first = ""
 			count = 0
-			for place, i in enumerate(board):
+			for place, _ in enumerate(board):
 				if board[place] == first:
 					count += 1
 				else:

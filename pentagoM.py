@@ -11,20 +11,20 @@ class Pentago():
 		self._get_next_init([0,]*36)
 
 	def move_received(self, move):
-		print 'received:', move
+		print('received:', move)
 		#does the move on the server:
 		gamedb.make_move(self.cid[self.active], self.active, move)
 		#sends back dirty board
 		state = gamedb.get_state(self.cid[self.active])
-		print state
-		print 'new state:', state
+		print(state)
+		print('new state:', state)
 		#check to see if game has been won:
 		winner = self._winner(state)
 		#if not:
 		if winner == 0:
 			self.active = 3 - self.active
 			#get next (same)
-			print "shown to other"
+			print("shown to other")
 			self._get_next_shown(state)
 		elif winner == -1:
 			gamedb.game_over(self.cid[1], 1, True) # mark game as a draw
@@ -34,18 +34,18 @@ class Pentago():
 			server.game_over(self.cid[winner], self.cid[3-winner], False, state)
 
 	def rotate_received(self, rotate):
-		print 'received:', rotate
+		print('received:', rotate)
 		#does the rotate on the server:
 		gamedb.make_rotate(self.cid[self.active], self.active, rotate)
 		#sends back dirty board
 		state = gamedb.get_state(self.cid[self.active])
-		print state
-		print 'new state:', state
+		print(state)
+		print('new state:', state)
 		#check to see if game has been won:
 		winner = self._winner(state)
 		#if not:
 		if winner == 0:
-			print "move to other"
+			print("move to other")
 			self.active = 3 - self.active
 			#get next
 			self._get_next_move(state)
@@ -57,15 +57,15 @@ class Pentago():
 			server.game_over(self.cid[winner], self.cid[3-winner], False, state)
 	
 	def shown_received(self, shown):
-		print 'received:', shown
-		print "rotate to other"
+		print('received:', shown)
+		print("rotate to other")
 		state = gamedb.get_state(self.cid[self.active])
 		self.active = 3 - self.active
 		self._get_next_rotate(state)
 
 	def init_received(self, init):
-		print 'received:', init
-		print "move to other"
+		print('received:', init)
+		print("move to other")
 		state = [0,]*36
 		self.active = 3 - self.active
 		self._get_next_move(state)

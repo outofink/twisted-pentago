@@ -69,7 +69,7 @@ def make_move(cid, player, move):
 	conn.commit()
 
 def make_rotate(cid, player, rotate):
-	values = ', '.join(str(e) for e in rotate)
+	# values = ', '.join(str(e) for e in rotate)
 	colc = 'cid' + str(player)	# This might be prone to SQL injections
 
 	for x in range(36):

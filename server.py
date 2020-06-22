@@ -51,34 +51,34 @@ class GameProtocol(Protocol):
 		self.active = True
 		self.deferred = d
 		data_out = dict(type='prompt', value='move', state=game_state, player=cid)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def prompt_for_shown(self, game_state, d, cid):
 		self.active = True
 		self.deferred = d
 		data_out = dict(type='prompt', value='shown', state=game_state, player=cid)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def prompt_for_init(self, game_state, d, cid):
 		self.active = True
 		self.deferred = d
 		data_out = dict(type='prompt', value='init', state=game_state, player=cid)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def prompt_for_rotate(self, game_state, d, cid):
 		self.active = True
 		self.deferred = d
 		data_out = dict(type='prompt', value='rotate', state=game_state, player=cid)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 	def game_over(self, is_winner, game_state, cid):
 		data_out = dict(type='winner', value=is_winner, state=game_state, player=cid)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 		self.transport.loseConnection()
 
 	def _send_error(self, msg):
 		data_out = dict(type='error', value=msg)
-		self.transport.write(json.dumps(data_out))
+		self.transport.write(json.dumps(data_out).encode('utf-8'))
 
 class GameFactory(ServerFactory):
 	
@@ -129,25 +129,25 @@ factory = None
 ### API defined below. Game should call these functions ###
 
 def get_move_from(cid, game_state):
-	print 'Get from player', cid
+	print('Get from player', cid)
 	d = defer.Deferred()
 	reactor.callWhenRunning(factory.get_move_from, d, cid, game_state)
 	return d
 
 def get_shown_from(cid, game_state):
-	print 'Get from player', cid
+	print('Get from player', cid)
 	d = defer.Deferred()
 	reactor.callWhenRunning(factory.get_shown_from, d, cid, game_state)
 	return d
 
 def get_init_from(cid, game_state):
-	print 'Get from player', cid
+	print('Get from player', cid)
 	d = defer.Deferred()
 	reactor.callWhenRunning(factory.get_init_from, d, cid, game_state)
 	return d
 
 def get_rotate_from(cid, game_state):
-	print 'Get from player', cid
+	print('Get from player', cid)
 	d = defer.Deferred()
 	reactor.callWhenRunning(factory.get_rotate_from, d, cid, game_state)
 	return d
