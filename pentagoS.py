@@ -1,40 +1,29 @@
 import os # only to clear the screen
+import numpy as np
 
 class Pentago:
 	def __init__(self):
 		self.player = 1
 		self.playing = True
 		self.placing = True
-		self.gameBoard = [[" " for i in range(9)] for j in range(4)]
+		self.gameBoard = np.full([4, 9], " ")
 
 		self.ps = {1:"W", 2:"B"}
 		self.players = {1: "White", 2: "Black"}
+		self.sectors = {"A": 0, "B": 1, "C": 2, "D": 3}
+		self.clockwise = {"'": -1, '"': 1}
 
 	def switchPlayers(self):
 		self.player = 3 - self.player
 
 	def get2dArray(self):
-		#make 2d array of each corner
-		corner = []
-
-		for x in range(4):
-			corner.append([self.gameBoard[x][i:i + 3] for i in range(0, len(self.gameBoard[x]), 3)])
-		
-		#make and fill 2d array of the whole board
-		board = []
-
-		for i in range(0,3,2):
-			for j in range(3):
-				board.append(corner[i][j] + corner[i+1][j])
-		return board
+		quad = []
+		for quadrant in self.gameBoard:
+			quad.append(quadrant.reshape(3,3))
+		return np.hstack((np.vstack((quad[0],quad[2])), np.vstack((quad[1], quad[3])))) 
 
 	def get1dArray(self):
-		array = self.get2dArray()
-		board = []
-		
-		for row in array:
-			board += row
-		return board
+		return self.get2dArray().flatten()
 
 	def printBoard(self):
 		#make 2d array of each corner
@@ -54,62 +43,33 @@ class Pentago:
 		print(prettyBoard)
 
 	def rotate(self, sector, clockwise):
-		#get corner and convert it to 2d array
-		corner2 = [self.gameBoard[sector][i:i + 3] for i in range(0, len(self.gameBoard[sector]), 3)]
-		#rotate corner
-		if clockwise:
-			rotatedCorner2 = list(zip(*corner2[::-1]))
-		else:
-			rotatedCorner2 = list(zip(*corner2))[::-1]
-		#convert back to 1d array
-		corner = [j for i in rotatedCorner2 for j in i]
-		#add the corner back
-		self.gameBoard[sector] = corner
+		self.gameBoard[sector] = np.rot90(self.gameBoard[sector].reshape(3,3), clockwise).flatten()
 
 	def rotateSquare(self):
-		sectors = {"A": 0, "B": 1, "C": 2, "D": 3}
-		clockwise = {"'": True, '"': False}
 		while True:
 			rawRot = input("Rotation (e.g. A' or C\"): ")
-			if len(rawRot) == 2:
-				if (rawRot[0] in sectors) and (rawRot[1] in clockwise):
-					self.rotate(sectors[rawRot[0]], clockwise[rawRot[1]])
-					self.placing = True
-					return
+			if (len(rawRot) == 2) and (andrawRot[0] in self.sectors) and (rawRot[1] in self.clockwise):
+				self.rotate(self.sectors[rawRot[0]], self.clockwise[rawRot[1]])
+				self.placing = True
+				return
 
 	def placePiece(self):
-		sectors = {"A": 0, "B": 1, "C": 2, "D": 3}
 		numbers = [str(i) for i in range(1, 10)]
 		while True:
 			rawLoc = input("Location (e.g. A4 or C9): ")
-			if len(rawLoc) == 2:
-				if (rawLoc[0] in sectors) and (rawLoc[1] in numbers):
-					if self.gameBoard[sectors[rawLoc[0]]][int(rawLoc[1]) - 1] == " ":
-						self.gameBoard[sectors[rawLoc[0]]][int(rawLoc[1]) - 1] = self.ps[self.player]
-						self.placing = False
-						return
-
-	def diagonalsPos(self, matrix):
-		#Get positive diagonals, going from bottom-left to top-right.
-		result = []
-		for di in ([(j, i - j) for j in range(6)] for i in range(11)):
-			result.append([matrix[i][j] for i, j in di if i >= 0 and j >= 0 and i < 6 and j < 6])
-		return result
-
-	def diagonalsNeg(self, matrix):
-		#Get negative diagonals, going from top-left to bottom-right.
-		result = []
-		for di in ([(j, i + j - 5) for j in range(6)] for i in range(11)):
-			result.append([matrix[i][j] for i, j in di if i >= 0 and j >= 0 and i < 6 and j < 6])
-		return result
+			if (len(rawLoc) == 2) and (rawLoc[0] in self.sectors) and (rawLoc[1] in numbers):
+				if self.gameBoard[self.sectors[rawLoc[0]]][int(rawLoc[1]) - 1] == " ":
+					self.gameBoard[self.sectors[rawLoc[0]]][int(rawLoc[1]) - 1] = self.ps[self.player]
+					self.placing = False
+					return
 
 	def winBoards(self):
 		board = self.get2dArray()
 
-		rows = board
-		columns = list(zip(*board))
-		diagPos = self.diagonalsPos(board)
-		diagNeg = self.diagonalsNeg(board)
+		rows = board.tolist()
+		columns = np.rot90(board).tolist()
+		diagPos = [board.diagonal(x).tolist() for x in range(-1,2)]
+		diagNeg = [np.fliplr(board).diagonal(x).tolist() for x in range(-1,2)]
 
 		return (rows + columns + diagNeg + diagPos)
 
@@ -117,16 +77,10 @@ class Pentago:
 		boards = self.winBoards()
 		winners = []
 		for board in boards:
-			first = ""
-			count = 0
-			for place, _ in enumerate(board):
-				if board[place] == first:
-					count += 1
-				else:
-					first = board[place]
-					count = 1
-				if count >= 5 and board[place] != " ":
-					winners.append(board[place])
+			s = ''.join(board)
+			for player in self.ps.values():
+				if s.find(player * 5) >= 0:
+					winners.append(player)
 					self.playing = False
 
 		if "B" in winners and "W" in winners:
@@ -137,13 +91,8 @@ class Pentago:
 			print("White wins! Good game!")
 
 		#check if the board's full
-		full = True
-		for corner in self.gameBoard:
-			for place in corner:
-				if place == " ":
-					full = False
-		if full and self.playing:
-			print("It's a tie! Good game!")
+		if not " " in self.gameBoard and self.playing:
+			print("All full! It's a tie! Good game!")
 			self.playing = False
 
 	def play(self):
