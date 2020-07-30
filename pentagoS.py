@@ -1,4 +1,3 @@
-import os # only to clear the screen
 import numpy as np
 
 class Pentago:
@@ -11,7 +10,8 @@ class Pentago:
 		self.ps = {1:"W", 2:"B"}
 		self.players = {1: "White", 2: "Black"}
 		self.sectors = {"A": 0, "B": 1, "C": 2, "D": 3}
-		self.clockwise = {"'": -1, '"': 1}
+		self.numbers = [str(i) for i in range(1, 10)]
+		self.direction = {"'": -1, '"': 1}
 
 	def switchPlayers(self):
 		self.player = 3 - self.player
@@ -39,29 +39,64 @@ class Pentago:
 		{} {} {}|{} {} {}
 		""".format(*board)
 
-		os.system('cls' if os.name == 'nt' else 'clear')
+		print("\033[H\033[J") # clears the screen
 		print(prettyBoard)
 
-	def rotate(self, sector, clockwise):
-		self.gameBoard[sector] = np.rot90(self.gameBoard[sector].reshape(3,3), clockwise).flatten()
+	def rotate(self, sector, direction):
+		self.gameBoard[sector] = np.rot90(self.gameBoard[sector].reshape(3,3), direction).flatten()
+
+	def place(self, position, player):
+		self.gameBoard[position["letter"]][position["number"]] = player
 
 	def rotateSquare(self):
+		print("{}'s Turn".format(self.players[self.player]))
 		while True:
 			rawRot = input("Rotation (e.g. A' or C\"): ")
-			if (len(rawRot) == 2) and (andrawRot[0] in self.sectors) and (rawRot[1] in self.clockwise):
-				self.rotate(self.sectors[rawRot[0]], self.clockwise[rawRot[1]])
-				self.placing = True
+			if self.cleanRotation(rawRot):
+				rot = self.formattedRotation(rawRot)
+				self.rotate(rot["letter"], rot["direction"])
+				self.printBoard()
 				return
 
 	def placePiece(self):
-		numbers = [str(i) for i in range(1, 10)]
+		print("{}'s Turn".format(self.players[self.player]))
 		while True:
 			rawLoc = input("Location (e.g. A4 or C9): ")
-			if (len(rawLoc) == 2) and (rawLoc[0] in self.sectors) and (rawLoc[1] in numbers):
-				if self.gameBoard[self.sectors[rawLoc[0]]][int(rawLoc[1]) - 1] == " ":
-					self.gameBoard[self.sectors[rawLoc[0]]][int(rawLoc[1]) - 1] = self.ps[self.player]
-					self.placing = False
-					return
+			if self.cleanLocation(rawLoc):
+				pos = self.formattedLocation(rawLoc)
+				self.place(pos, self.ps[self.player])
+				self.printBoard()
+				return
+
+	def cleanLocation(self, loc):
+		if len(loc) != 2:
+			return False
+		if loc[0].upper() not in self.sectors:
+			return False
+		if loc[1] not in self.numbers:
+			return False
+		if self.gameBoard[self.sectors[loc[0].upper()]][int(loc[1]) - 1] != " ":
+			return False
+		return True
+		
+	def cleanRotation(self, rot):
+		if len(rot) != 2:
+			return False
+		if rot[0].upper() not in self.sectors:
+			return False
+		if rot[1] not in self.direction:
+			return False
+		return True
+
+	def formattedLocation(self, loc):
+		letter = self.sectors[loc[0].upper()]
+		number = int(loc[1]) - 1
+		return {"letter": letter, "number": number}
+
+	def formattedRotation(self, rot):
+		letter = self.sectors[rot[0].upper()]
+		direction = self.direction[rot[1]]
+		return {"letter": letter, "direction": direction}
 
 	def winBoards(self):
 		board = self.get2dArray()
@@ -98,13 +133,9 @@ class Pentago:
 	def play(self):
 		self.printBoard()
 		while self.playing:
-			print("{}'s Turn".format(self.players[self.player]))
-			if self.placing:
-				self.placePiece()
-			else:
-				self.rotateSquare()
-				self.switchPlayers()
-
+			self.placePiece()
+			self.rotateSquare()
+			self.switchPlayers()
 			self.printBoard()
 			self.checkGameOver()
 
