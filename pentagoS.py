@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Pentago:
     def __init__(self):
         self.player = 1
@@ -7,29 +8,29 @@ class Pentago:
         self.placing = True
         self.gameBoard = np.full([4, 9], " ")
 
-        self.ps = {1:"W", 2:"B"}
+        self.ps = {1: "W", 2: "B"}
         self.players = {1: "White", 2: "Black"}
         self.sectors = {"A": 0, "B": 1, "C": 2, "D": 3}
         self.numbers = [str(i) for i in range(1, 10)]
         self.direction = {"'": -1, '"': 1}
 
-    def switchPlayers(self):
+    def switch_players(self):
         self.player = 3 - self.player
 
-    def get2dArray(self):
+    def get_2d_array(self):
         quad = []
         for quadrant in self.gameBoard:
-            quad.append(quadrant.reshape(3,3))
-        return np.hstack((np.vstack((quad[0],quad[2])), np.vstack((quad[1], quad[3]))))
+            quad.append(quadrant.reshape(3, 3))
+        return np.hstack((np.vstack((quad[0], quad[2])), np.vstack((quad[1], quad[3]))))
 
-    def get1dArray(self):
-        return self.get2dArray().flatten()
+    def get_1d_array(self):
+        return self.get_2d_array().flatten()
 
-    def printBoard(self):
-        #make 2d array of each corner
-        board = self.get1dArray()
+    def print_board(self):
+        # make 2d array of each corner
+        board = self.get_1d_array()
 
-        prettyBoard = """\
+        pretty_board = """\
         {} {} {}|{} {} {}
         {} {} {}|{} {} {}
         {} {} {}|{} {} {}
@@ -39,77 +40,77 @@ class Pentago:
         {} {} {}|{} {} {}
         """.format(*board)
 
-        print("\033[H\033[J") # clears the screen
-        print(prettyBoard)
+        print("\033[H\033[J")  # clears the screen
+        print(pretty_board)
 
     def rotate(self, sector, direction):
-        self.gameBoard[sector] = np.rot90(self.gameBoard[sector].reshape(3,3), direction).flatten()
+        self.gameBoard[sector] = np.rot90(self.gameBoard[sector].reshape(3, 3), direction).flatten()
 
     def place(self, position, player):
         self.gameBoard[position["letter"]][position["number"]] = player
 
-    def rotateSquare(self):
+    def rotate_square(self):
         print("{}'s Turn".format(self.players[self.player]))
         while True:
-            rawRot = input("Rotation (e.g. A' or C\"): ")
-            if self.cleanRotation(rawRot):
-                rot = self.formattedRotation(rawRot)
+            raw_rotation = input("Rotation (e.g. A' or C\"): ")
+            if self.is_valid_rotation(raw_rotation):
+                rot = self.formatted_rotation(raw_rotation)
                 self.rotate(rot["letter"], rot["direction"])
-                self.printBoard()
+                self.print_board()
                 return
 
-    def placePiece(self):
+    def place_piece(self):
         print("{}'s Turn".format(self.players[self.player]))
         while True:
-            rawLoc = input("Location (e.g. A4 or C9): ")
-            if self.cleanLocation(rawLoc):
-                pos = self.formattedLocation(rawLoc)
+            raw_location = input("Location (e.g. A4 or C9): ")
+            if self.is_valid_location(raw_location):
+                pos = self.formatted_location(raw_location)
                 self.place(pos, self.ps[self.player])
-                self.printBoard()
+                self.print_board()
                 return
 
-    def cleanLocation(self, loc):
-        if len(loc) != 2:
+    def is_valid_location(self, location):
+        if len(location) != 2:
             return False
-        if loc[0].upper() not in self.sectors:
+        if location[0].upper() not in self.sectors:
             return False
-        if loc[1] not in self.numbers:
+        if location[1] not in self.numbers:
             return False
-        if self.gameBoard[self.sectors[loc[0].upper()]][int(loc[1]) - 1] != " ":
-            return False
-        return True
-
-    def cleanRotation(self, rot):
-        if len(rot) != 2:
-            return False
-        if rot[0].upper() not in self.sectors:
-            return False
-        if rot[1] not in self.direction:
+        if self.gameBoard[self.sectors[location[0].upper()]][int(location[1]) - 1] != " ":
             return False
         return True
 
-    def formattedLocation(self, loc):
-        letter = self.sectors[loc[0].upper()]
-        number = int(loc[1]) - 1
+    def is_valid_rotation(self, rotation):
+        if len(rotation) != 2:
+            return False
+        if rotation[0].upper() not in self.sectors:
+            return False
+        if rotation[1] not in self.direction:
+            return False
+        return True
+
+    def formatted_location(self, location):
+        letter = self.sectors[location[0].upper()]
+        number = int(location[1]) - 1
         return {"letter": letter, "number": number}
 
-    def formattedRotation(self, rot):
-        letter = self.sectors[rot[0].upper()]
-        direction = self.direction[rot[1]]
+    def formatted_rotation(self, rotation):
+        letter = self.sectors[rotation[0].upper()]
+        direction = self.direction[rotation[1]]
         return {"letter": letter, "direction": direction}
 
-    def winBoards(self):
-        board = self.get2dArray()
+    def potential_win_layouts(self):
+        board = self.get_2d_array()
 
         rows = board.tolist()
         columns = np.rot90(board).tolist()
-        diagPos = [board.diagonal(x).tolist() for x in range(-1,2)]
-        diagNeg = [np.fliplr(board).diagonal(x).tolist() for x in range(-1,2)]
+        diagonal1 = [board.diagonal(x).tolist() for x in range(-1, 2)]
+        diagonal2 = [np.fliplr(board).diagonal(x).tolist() for x in range(-1, 2)]
 
-        return (rows + columns + diagNeg + diagPos)
+        return [*rows, *columns, *diagonal1, *diagonal2]
 
-    def checkGameOver(self):
-        boards = self.winBoards()
+    def check_gameover(self):
+        boards = self.potential_win_layouts()
         winners = []
         for board in boards:
             s = ''.join(board)
@@ -125,19 +126,20 @@ class Pentago:
         elif "W" in winners:
             print("White wins! Good game!")
 
-        #check if the board's full
-        if not " " in self.gameBoard and self.playing:
+        # check if the board's full
+        if " " not in self.gameBoard and self.playing:
             print("All full! It's a tie! Good game!")
             self.playing = False
 
     def play(self):
-        self.printBoard()
+        self.print_board()
         while self.playing:
-            self.placePiece()
-            self.rotateSquare()
-            self.switchPlayers()
-            self.printBoard()
-            self.checkGameOver()
+            self.place_piece()
+            self.rotate_square()
+            self.switch_players()
+            self.print_board()
+            self.check_gameover()
+
 
 if __name__ == "__main__":
     Pentago().play()
